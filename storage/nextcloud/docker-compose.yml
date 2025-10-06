@@ -1,0 +1,94 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nextcloud-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${NC_DB_NAME}
+      POSTGRES_USER: ${NC_DB_USER}
+      POSTGRES_PASSWORD: ${NC_DB_PASSWORD}
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${NC_DB_USER} -d ${NC_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - nextcloud-internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextcloud-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - nextcloud-internal
+
+  app:
+    image: nextcloud:stable
+    container_name: nextcloud-app
+    restart: unless-stopped
+    labels:
+      glance.name: Nextcloud
+      glance.icon: si:nextcloud
+      glance.url: https://cloud.jubslab.org
+      glance.description: Personal cloud suite
+      glance.hide: false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${NC_DB_NAME}
+      POSTGRES_USER: ${NC_DB_USER}
+      POSTGRES_PASSWORD: ${NC_DB_PASSWORD}
+      # Redis
+      REDIS_HOST: redis
+      # Tuning
+      PHP_MEMORY_LIMIT: 1024M
+      PHP_UPLOAD_LIMIT: 2G
+      APACHE_BODY_LIMIT: 0
+      # Proxy awareness
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NC_TRUSTED_DOMAINS}
+      OVERWRITEPROTOCOL: https
+      OVERWRITEHOST: ${NC_PUBLIC_HOST}
+      OVERWRITECLIURL: https://${NC_PUBLIC_HOST}
+    volumes:
+      - ./app:/var/www/html
+      - ./config:/var/www/html/config
+      - ./custom_apps:/var/www/html/custom_apps
+      - /mnt/media/nextcloud/data:/var/www/html/data
+    networks:
+      - nextcloud-internal
+      - edge
+
+  cron:
+    image: nextcloud:stable
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    depends_on:
+      - app
+    entrypoint: /cron.sh
+    volumes:
+      - ./app:/var/www/html
+      - ./config:/var/www/html/config
+      - ./custom_apps:/var/www/html/custom_apps
+      - /mnt/media/nextcloud/data:/var/www/html/data
+    networks:
+      - nextcloud-internal
+      
+networks:
+  nextcloud-internal:
+    driver: bridge
+  edge:
+    external: true
+  

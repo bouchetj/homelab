@@ -1,0 +1,18 @@
+services:
+  glance:
+    image: glanceapp/glance
+    container_name: glance
+    volumes:
+      - /srv/homelab/ops/glance/config:/app/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8280:8080"
+    networks:
+      - walle-network
+    restart: unless-stopped
+
+networks:
+  walle-network:
+    external: true

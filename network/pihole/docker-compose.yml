@@ -1,0 +1,26 @@
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    labels:
+      glance.name: Pi-hole
+      glance.icon: si:pihole
+      glance.url: https://pihole.jubslab.org/admin
+      glance.description: Network-wide ad blocking
+      glance.hide: false
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8080:80"
+    environment:
+      TZ: America/Los_Angeles
+      FTLCONF_webserver_api_password: 'c9mM76NE!m#L'
+    volumes:
+      - /srv/homelab/network/pihole/etc-pihole:/etc/pihole/
+    restart: unless-stopped
+    networks:
+      - walle-network
+
+networks:
+  walle-network:
+    external: true

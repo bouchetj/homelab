@@ -1,0 +1,30 @@
+# Cloudflare tunnel credentials
+/.cloudflared/
+
+# Environment and secret files
+*.env
+*.env.*
+**/.env
+**/.env.*
+
+# Service runtime data
+storage/immich/library/
+storage/immich/postgres/
+storage/immich/model-cache/
+storage/nextcloud/app/
+storage/nextcloud/custom_apps/
+storage/nextcloud/db/
+storage/nextcloud/config/
+network/pihole/etc-pihole/
+
+# Dependency and build artefacts
+**/__pycache__/
+**/.pytest_cache/
+**/node_modules/
+**/dist/
+**/build/
+
+# Logs and temporary files
+**/*.log
+**/*.log.*
+**/*.tmp

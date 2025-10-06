@@ -1,0 +1,17 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/julien/.acme.sh:/acme.sh:ro
+    restart: unless-stopped
+    networks:
+      - walle-network
+
+networks:
+  walle-network:
+    external: true
